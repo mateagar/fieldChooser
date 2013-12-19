@@ -237,6 +237,7 @@
                 _selectedIndex = -1;
                 _extendedSelectionIndex = -1;
                 this.children().removeClass("fc-selected");
+                _list.trigger("selectionChanged", [_list]);
             }
             
             _list.add = function(content) {
