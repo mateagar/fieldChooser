@@ -305,7 +305,7 @@
         //----------------------------------------------------------------------
         var _options = $.extend({}, $.fn.fieldChooser.defaults, options);
         var tabIndex = parseInt(this.attr("tabIndex"));
-        if (tabIndex == NaN) {
+        if (isNaN(tabIndex)) {
             tabIndex = 0;
         }
         this.removeAttr("tabIndex");
