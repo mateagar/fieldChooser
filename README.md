@@ -147,7 +147,7 @@ Retrieves the index of the last item to which the selection was extended. You ca
 (none)
 
 **returns**  
-The index value (an integer) of the last item in an extended selection. If there is no selection, or if the selection has not been extended, returns -1. 
+The index value (an integer) of the last item in an extended selection. If there is no selection, or if the selection has not been extended, returns the same value as `getSelectedIndex()`. 
 
 ###clearSelection()###
 Clears the set of selected fields in the list.
