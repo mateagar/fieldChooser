@@ -23,8 +23,8 @@ How do I use it?
 
 For example:  
 ```javascript  
-var $sourceFields = $("#sourceFields").children();
-var $destinationFields = $("#destinationFields").children();
+var $sourceFields = $("#sourceFields");
+var $destinationFields = $("#destinationFields");
 var $chooser = $("#fieldChooser").fieldChooser(sourceFields, destinationFields);
 
 ```
