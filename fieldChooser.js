@@ -20,7 +20,7 @@
 // THE SOFTWARE.
 
 (function($) {
-    $.fn.fieldChooser = function (options) {
+    $.fn.fieldChooser = function (sourceList, destinationList, options) {
         //----------------------------------------------------------------------
         // Poor man's singleton 
         //----------------------------------------------------------------------
@@ -83,7 +83,7 @@
                     if (list == _chooser.getSourceList()) {
                         otherList = _chooser.getDestinationList();
                     }
-                    otherList.clearSelection();
+                    otherList.clearSelection(true);
                 }
             }
             _lastSelectionList = list;
@@ -93,15 +93,41 @@
         // fieldList class 
         //----------------------------------------------------------------------
         var fieldList = function (parent, tabIndex) {
-            var _list = $("<div class='fc-field-list' tabIndex='" + tabIndex + 
-                          "'></div>");
-            _list.appendTo(parent);
+            var _list = $(parent);
+            _list.addClass("fc-field-list");
+            _list.attr("tabIndex", tabIndex);
             
             var _selectedIndex = -1;
             var _extendedSelectionIndex = -1;
             
-            _list.selectAt = function (index) {
-                this.clearSelection();
+            var setFieldsOnList = function (list, content) {
+                content.addClass("fc-field");
+                content.attr("tabIndex", tabIndex);
+                
+                content.off("click.field");
+                content.on("click.field", function(event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+
+                    var $this = $(this);
+                    if (event.ctrlKey || event.metaKey) {
+                        _chooser.getFieldList($this).toggleFieldSelection($this);
+                    }
+                    else if (event.shiftKey) {
+                        _chooser.getFieldList($this).selectTo($this);
+                    }
+                    else {
+                        _chooser.getFieldList($this).selectField($this);
+                    }
+                    _currentList = list;
+                });
+
+            };
+            
+            setFieldsOnList(_list, _list.children());
+            
+            _list.selectAt = function (index, up) {
+                this.clearSelection(true);
                 var fields = _list.getFields();
                 if (index >= fields.length) {
                     index = fields.length - 1;
@@ -115,6 +141,7 @@
                 if (selectedField) {
                     selectedField.addClass("fc-selected");
                     _selectedIndex = index;
+                    _list.scrollToField(selectedField, up);
                 }
                 else {
                     _selectedIndex = -1;
@@ -170,14 +197,21 @@
                         else {
                             newIndex++;
                         }
+                        
+                        if (newIndex >= 0 && newIndex < fields.length) {
+                            selectedField = fields.eq(newIndex);
+                        }
                     }
+
+                    _list.scrollToField(selectedField, up);
+
                     _list.trigger("selectionChanged", [_list]);
                     _extendedSelectionIndex = newIndex;
                 }
             }
             
             _list.selectField = function (field) {
-                this.clearSelection();
+                this.clearSelection(true);
                 field.addClass("fc-selected");
                 _selectedIndex = field.index();
                 _list.trigger("selectionChanged", [_list]);
@@ -240,7 +274,7 @@
             
             _list.getSelectedIndex = function () {
                 return _selectedIndex;
-            }
+            };
             
             _list.getExtendedSelectionIndex = function () {
                 var index = _extendedSelectionIndex;
@@ -248,44 +282,61 @@
                     index = _selectedIndex;
                 }
                 return index;
-            }
+            };
             
             _list.getSelection = function () {
                 return this.children(".fc-selected");
-            }
+            };
             
-            _list.clearSelection = function () {
+            _list.clearSelection = function (suppressEvent) {
                 _selectedIndex = -1;
                 _extendedSelectionIndex = -1;
                 this.children().removeClass("fc-selected");
-                _list.trigger("selectionChanged", [_list]);
-            }
+                if (suppressEvent) {
+                    // continue
+                }
+                else {
+                    _list.trigger("selectionChanged", [_list]);
+                }
+            };
             
-            _list.add = function(content) {
-                content.addClass("fc-field");
-                content.attr("tabIndex", tabIndex);
-                content.on("click", function(event) {
-                    var $this = $(this);
-                    if (event.ctrlKey || event.metaKey) {
-                        _chooser.getFieldList($this).toggleFieldSelection($this);
-                    }
-                    else if (event.shiftKey) {
-                        _chooser.getFieldList($this).selectTo($this);
-                    }
-                    else {
-                        _chooser.getFieldList($this).selectField($this);
-                    }
-                    _currentList = _list;
-                });
+            _list.add = function (content) {
+                setFieldsOnList(_list, content);
                 content.appendTo(_list);
-
                 return _list;
             };
             
             _list.getFields = function () {
                 return _list.children();
-            }
+            };
             
+            _list.scrollToField = function (field, up) {
+                var listHeight = _list.height();
+                var listTop = _list.scrollTop();
+                var listBottom = listTop + listHeight;
+                
+                var fieldHeight = field.height();
+                var fieldTop = field.offset().top;
+                var fieldBottom = fieldTop + fieldHeight;
+
+                if (up) {
+                    if (fieldTop < 0) {
+                        _list.scrollTop(listTop + fieldTop);
+                    }
+                    else if (fieldBottom > listHeight) {
+                        _list.scrollTop(listHeight + fieldHeight);
+                    }                    
+                }
+                else {
+                    if (fieldTop < 0) {
+                        _list.scrollTop(listTop + fieldTop - fieldHeight);
+                    }
+                    else if (fieldBottom > listHeight) {
+                        _list.scrollTop(listTop + (fieldBottom - listHeight));
+                    }
+                }
+            };
+           
             _list.sortable({
                 connectWith: ".fc-field-list",
                 cursor: "move",
@@ -319,9 +370,9 @@
             tabIndex = 0;
         }
         this.removeAttr("tabIndex");
-        var _sourceList = new fieldList(this, tabIndex).addClass("fc-source-fields");
+        var _sourceList = new fieldList(sourceList, tabIndex).addClass("fc-source-fields");
         var _destinationList = 
-            new fieldList(this, tabIndex).addClass("fc-destination-fields");
+            new fieldList(destinationList, tabIndex).addClass("fc-destination-fields");
         var _currentList = null;
 
         //----------------------------------------------------------------------
@@ -350,6 +401,11 @@
         //----------------------------------------------------------------------
         // Public methods
         //----------------------------------------------------------------------
+        this.destroy = function () {
+            this.getOptions = null;
+            _sourceList.sortable("destroy");
+            _destinationList.sortable("destroy");
+        };
 
         //----------------------------------------------------------------------
         // Event handlers 
@@ -358,7 +414,10 @@
             var selection = ui.item.data("selection");
             
             if (hitTest(_sourceList, ui.item, ui.offset)) {
+                _currentList = _sourceList;
                 _sourceList.add(selection);
+                _destinationList.clearSelection();
+                _sourceList.trigger("selectionChanged", [_sourceList]);
                 _chooser.trigger("listChanged", [selection, _sourceList]);
                 ui.item.after(selection).remove();
             }
@@ -368,8 +427,9 @@
             else {
                 _destinationList.getSelection().remove();
                 _sourceList.add(selection);
-                _lastSelectionList = _sourceList;
-                _sourceList.clearSelection();
+                _sourceList.scrollToField(selection, false);
+                _destinationList.clearSelection();
+                _sourceList.trigger("selectionChanged", [_sourceList]);
                 _currentList = _sourceList;
                 _chooser.trigger("listChanged", [selection, _sourceList]);
             }
@@ -379,7 +439,10 @@
             var selection = ui.item.data("selection");
 
             if (hitTest(_destinationList, ui.item, ui.offset)) {
+                _currentList = _destinationList;
                 _destinationList.add(selection);
+                _sourceList.clearSelection();
+                _destinationList.trigger("selectionChanged", [_destinationList]);
                 _chooser.trigger("listChanged", [selection, _destinationList]);
             }
             else if (hitTest(_sourceList, ui.item, ui.offset)) {
@@ -427,7 +490,7 @@
                         if (newIndex < 0) {
                             newIndex = 0;
                         }
-                        _currentList.selectAt(newIndex);
+                        _currentList.selectAt(newIndex, true);
                     }
                 }
                 else if (event.which == 40) { // down arrow 
@@ -440,7 +503,7 @@
                         if (selectedIndex < 0) {
                             newIndex = _currentList.getFields().length - 1;
                         }
-                        _currentList.selectAt(newIndex);
+                        _currentList.selectAt(newIndex, false);
                     }
                 }
                 else if (event.which == 27) { // escape

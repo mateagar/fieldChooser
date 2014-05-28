@@ -12,20 +12,20 @@ Why would I use it?
 
 Dependencies
 ============
-`progressSpin.js` uses the [jQuery][] library for DOM manipulation, and [jQuery UI][] for drag and drop support. 
+`fieldChooser.js` uses the [jQuery][] library for DOM manipulation, and [jQuery UI][] for drag and drop support. 
 
 How do I use it?
 ================
 
 1. Create a `<div>` to hold the field chooser. 
+2. Within the field chooser `<div>`, add an additional `<div>` element which contain the source "fields" and another `<div>` containing the destination fields.
 2. Create a [jQuery object][] for the `<div>`, and invoke the `fieldChooser()` method on it to instantiate and return the field chooser.
-3. Put content into source or destination lists using the `add()` method on the list.
 
 For example:  
 ```javascript  
-var $chooser = $("#fieldChooser").fieldChooser();
 var $sourceFields = $("#sourceFields").children();
-$chooser.getSourceList().add($sourceFields);
+var $destinationFields = $("#destinationFields").children();
+var $chooser = $("#fieldChooser").fieldChooser(sourceFields, destinationFields);
 
 ```
 
@@ -38,10 +38,14 @@ The `fieldChooser` houses two containers, one for the source elements (fields), 
 
 NOTE: In order to enable keyboard support, all clickable elements (field lists, fields) within a `fieldChooser` are assigned a `tabIndex` attribute. They will inherit this value from the parent element on which the `fieldChooser()` method is invoked, but if this element does not have one, they will assume a default `tabIndex` value of 0.
 
-###fieldChooser(options)###
+###fieldChooser(sourceFields, destinationFields, options)###
 Creates a new field chooser and binds it to the `<div>` on which this method is called. If invoked more than once on the same [jQuery object][], will return a single instance; however, if you create a new [jQuery object][] for the same div, you will end up with more than one chooser.
 
 **parameters**  
+*sourceFields* ([jQuery object][]): A container element which holds all of the "field" elements you want to display in the source list.
+
+*destinationFields* ([jQuery object][]): A container element which holds all of the "field" elements you want to display in the destination list.
+
 *options* (object): Configuration options for the field chooser instance. Currently, there are no configuration options, so this is just a placeholder for future functionality.
 
 **returns**  
@@ -83,6 +87,15 @@ Gets the container for a particular field.
 **returns**  
 The `fieldList` object containing the field. 
 
+###destroy()###
+Removes the drag-drop capability from the list.
+
+**parameters**
+(none)
+
+**returns**
+(none)
+
 `fieldChooser` Events
 ---------------------
 ###listChanged###
@@ -111,7 +124,7 @@ Adds content (fields) to the list.
 *content* ([jQuery object][]): A field (or set of fields) to add to the list.
 
 **returns**  
-(none)
+The list (for chaining).
 
 ###getFields()###
 Retrieves all of the fields in the list.

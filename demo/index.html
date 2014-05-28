@@ -13,25 +13,28 @@
         
         <script>
             $(document).ready(function () {
-                var $chooser = $("#fieldChooser").fieldChooser();
                 var $sourceFields = $("#sourceFields").children();
-                $chooser.getSourceList().add($sourceFields);
+                var $destinationFields = $("#destinationFields").children();
+                var $chooser = $("#fieldChooser").fieldChooser(sourceFields, destinationFields);
             });
         </script>
     </head>
     <body>
-        <div id="sourceFields">
-            <div>First name</div>
-            <div>Last name</div>
-            <div>Home</div>
-            <div>Work</div>
-            <div>Direct</div>
-            <div>Cell</div>
-            <div>Fax</div>
-            <div>Work email</div>
-            <div>Personal email</div>
-            <div>Website</div>
+        <div id="fieldChooser" tabIndex="1">
+            <div id="sourceFields">
+                <div>First name</div>
+                <div>Last name</div>
+                <div>Home</div>
+                <div>Work</div>
+                <div>Direct</div>
+                <div>Cell</div>
+                <div>Fax</div>
+                <div>Work email</div>
+                <div>Personal email</div>
+                <div>Website</div>
+            </div>
+            <div id="destinationFields">
+            </div>
         </div>
-        <div id="fieldChooser" tabIndex="1"></div>
     </body>
 </html>
