@@ -25,7 +25,7 @@ For example:
 ```javascript  
 var $sourceFields = $("#sourceFields");
 var $destinationFields = $("#destinationFields");
-var $chooser = $("#fieldChooser").fieldChooser(sourceFields, destinationFields);
+var $chooser = $("#fieldChooser").fieldChooser($sourceFields, $destinationFields);
 
 ```
 
